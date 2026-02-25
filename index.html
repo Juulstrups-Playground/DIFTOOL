@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategi·Lab</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Sora',sans-serif;background:#0d0f14;color:#f0f2f7;overflow-x:hidden}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+  textarea:focus{outline:none}
+  @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes barIn{from{width:0%}}
+  .mi{animation:msgIn .3s ease}
+  .d1{animation:bounce 1.2s infinite}
+  .d2{animation:bounce 1.2s .2s infinite}
+  .d3{animation:bounce 1.2s .4s infinite}
+
+  /* HEADER */
+  header{
+    padding:18px 40px;
+    border-bottom:1px solid rgba(255,255,255,.07);
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;
+    background:rgba(13,15,20,.95);
+    backdrop-filter:blur(16px);
+    z-index:100;
+  }
+  .logo{
+    font-family:'DM Serif Display',serif;font-size:22px;
+    background:linear-gradient(135deg,#4f8eff,#a78bfa);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .progress-dots{display:flex;gap:8px}
+  .pdot{
+    width:10px;height:10px;border-radius:50%;
+    background:#1e2330;border:1.5px solid rgba(255,255,255,.07);
+    transition:all .4s;
+  }
+  .pdot.done{background:#4f8eff;border-color:#4f8eff;box-shadow:0 0 8px #4f8eff}
+  .pdot.active{background:#a78bfa;border-color:#a78bfa;box-shadow:0 0 8px #a78bfa}
+
+  /* API BANNER */
+  .api-banner{
+    padding:11px 40px;
+    border-bottom:1px solid rgba(79,142,255,.2);
+    background:linear-gradient(135deg,rgba(79,142,255,.08),rgba(167,139,250,.08));
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .api-banner label{font-size:12px;color:#6b7280;white-space:nowrap}
+  .api-banner input{
+    flex:1;max-width:360px;
+    background:#1e2330;border:1px solid rgba(255,255,255,.07);
+    border-radius:8px;padding:7px 12px;
+    color:#f0f2f7;font-family:'Sora',sans-serif;font-size:12px;
+    outline:none;transition:border-color .2s;
+  }
+  .api-banner input:focus{border-color:rgba(79,142,255,.4)}
+  .api-save{
+    background:#4f8eff;border:none;border-radius:8px;
+    padding:7px 16px;color:white;
+    font-family:'Sora',sans-serif;font-size:12px;font-weight:600;
+    cursor:pointer;transition:background .2s;white-space:nowrap;
+  }
+  .api-save:hover{background:#3d7aff}
+  #apiStatus{display:none;font-size:11px;padding:4px 10px;border-radius:100px}
+  #apiStatus.ok{display:inline-block;background:rgba(52,211,153,.1);color:#34d399;border:1px solid rgba(52,211,153,.2)}
+  #apiStatus.err{display:inline-block;background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.2)}
+
+  /* HERO */
+  .hero{text-align:center;padding:68px 40px 50px;position:relative;overflow:hidden}
+  .hero::before{
+    content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);
+    width:500px;height:300px;
+    background:radial-gradient(ellipse,rgba(79,142,255,.12) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .hero-tag{
+    display:inline-block;font-size:11px;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;
+    color:#4f8eff;background:rgba(79,142,255,.1);
+    border:1px solid rgba(79,142,255,.2);
+    padding:5px 14px;border-radius:100px;margin-bottom:18px;
+  }
+  .hero h1{
+    font-family:'DM Serif Display',serif;
+    font-size:clamp(28px,5vw,46px);
+    line-height:1.1;letter-spacing:-.02em;
+    margin-bottom:14px;
+  }
+  .hero h1 em{font-style:italic;color:#a78bfa}
+  .hero p{color:#6b7280;font-size:15px;max-width:460px;margin:0 auto;line-height:1.7}
+
+  /* SECTION */
+  .section{max-width:800px;margin:0 auto 64px;padding:0 20px}
+  .section-head{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+  .step-badge{
+    width:32px;height:32px;border-radius:50%;
+    background:linear-gradient(135deg,#4f8eff,#a78bfa);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:700;flex-shrink:0;
+  }
+  .step-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#6b7280}
+  .step-name{font-family:'DM Serif Display',serif;font-size:22px;margin-top:2px}
+  .done-badge{
+    margin-left:auto;display:none;align-items:center;
+    gap:5px;font-size:12px;font-weight:600;color:#34d399;
+  }
+  .done-badge.show{display:flex}
+
+  /* VIDEO */
+  .video-card{background:#161921;border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;margin-bottom:16px}
+  .video-wrap{width:100%;aspect-ratio:16/9;position:relative;background:#000}
+  .video-wrap iframe{width:100%;height:100%;border:none;display:block}
+  .chat-open-badge{
+    position:absolute;top:10px;right:10px;
+    background:rgba(13,15,20,.85);backdrop-filter:blur(8px);
+    border:1px solid rgba(52,211,153,.3);border-radius:100px;
+    padding:4px 10px;display:none;align-items:center;gap:5px;
+    font-size:11px;font-weight:600;color:#34d399;pointer-events:none;
+  }
+  .chat-open-badge.show{display:flex}
+  .chat-open-badge .dot{width:6px;height:6px;border-radius:50%;background:#34d399;box-shadow:0 0 6px #34d399}
+  .video-meta{padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+  .video-title{font-size:13px;font-weight:500}
+  .video-dur{font-size:11px;color:#6b7280;background:#1e2330;padding:3px 10px;border-radius:100px}
+
+  /* CHAT CARD */
+  .chat-card{background:#161921;border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden}
+  .chat-head{
+    padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.07);
+    display:flex;align-items:center;gap:9px;
+  }
+  .ai-av{
+    width:26px;height:26px;border-radius:50%;
+    background:linear-gradient(135deg,#4f8eff,#a78bfa);
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:700;color:white;
+  }
+  .chat-head-name{font-size:13px;font-weight:600}
+  .chat-head-sub{font-size:11px;color:#6b7280}
+  .online-dot{margin-left:auto;width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 6px #34d399}
+  .prog-bar-bg{height:3px;background:#1e2330}
+  .prog-bar-fill{height:100%;background:linear-gradient(90deg,#4f8eff,#a78bfa);width:0%;transition:width .5s}
+  .prog-label{text-align:right;padding:4px 16px 2px;font-size:11px;color:#6b7280}
+  .chat-msgs{
+    padding:16px;display:flex;flex-direction:column;gap:11px;
+    min-height:90px;max-height:340px;overflow-y:auto;
+  }
+  .chat-locked{
+    padding:22px 16px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:7px;
+    color:#6b7280;font-size:13px;
+  }
+  .msg{display:flex;gap:8px}
+  .msg.user{flex-direction:row-reverse}
+  .msg-av{
+    width:27px;height:27px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:600;flex-shrink:0;margin-top:2px;color:white;
+  }
+  .msg.ai .msg-av{background:linear-gradient(135deg,#4f8eff,#a78bfa)}
+  .msg.user .msg-av{background:#1d2d4f}
+  .bubble{
+    max-width:76%;padding:9px 13px;border-radius:13px;
+    font-size:13px;line-height:1.65;
+  }
+  .msg.ai .bubble{background:#1a1f2e;border:1px solid rgba(255,255,255,.07);border-top-left-radius:4px}
+  .msg.user .bubble{background:#1d2d4f;border:1px solid rgba(79,142,255,.2);border-top-right-radius:4px;color:#c5d8ff}
+  .typing-dots{padding:11px 13px;background:#1a1f2e;border:1px solid rgba(255,255,255,.07);border-radius:13px;border-top-left-radius:4px;display:flex;gap:4px;align-items:center}
+  .typing-dots span{width:6px;height:6px;border-radius:50%;background:#6b7280;display:block}
+  .chat-input-area{
+    padding:10px 12px;border-top:1px solid rgba(255,255,255,.07);
+    display:flex;gap:8px;align-items:flex-end;
+  }
+  .chat-input{
+    flex:1;background:#1e2330;border:1px solid rgba(255,255,255,.07);
+    border-radius:10px;padding:9px 12px;
+    color:#f0f2f7;font-family:'Sora',sans-serif;font-size:13px;
+    resize:none;min-height:40px;max-height:100px;line-height:1.5;
+  }
+  .chat-input:focus{border-color:rgba(79,142,255,.4)}
+  .chat-input:disabled{opacity:.5}
+  .send-btn{
+    width:40px;height:40px;border-radius:10px;
+    background:#4f8eff;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;transition:background .2s;
+  }
+  .send-btn:hover{background:#3d7aff}
+  .send-btn:disabled{background:#1e2330;cursor:not-allowed}
+
+  /* DIVIDER */
+  .divider{max-width:800px;margin:0 auto 48px;padding:0 20px;display:flex;align-items:center;gap:12px}
+  .div-line{flex:1;height:1px;background:rgba(255,255,255,.07)}
+  .div-icon{
+    width:28px;height:28px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.07);background:#161921;
+    display:flex;align-items:center;justify-content:center;
+    color:#6b7280;font-size:12px;
+  }
+
+  /* ACTION PLAN */
+  .plan-section{max-width:800px;margin:0 auto 80px;padding:0 20px}
+  .plan-header{text-align:center;margin-bottom:28px}
+  .plan-tag{
+    display:inline-block;font-size:10px;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;
+    color:#34d399;background:rgba(52,211,153,.1);
+    border:1px solid rgba(52,211,153,.2);
+    padding:5px 14px;border-radius:100px;margin-bottom:12px;
+  }
+  .plan-header h2{font-family:'DM Serif Display',serif;font-size:32px;letter-spacing:-.02em;margin-bottom:6px}
+  .plan-header p{color:#6b7280;font-size:13px}
+  .plan-locked-box{
+    background:#161921;border:1px solid rgba(255,255,255,.07);
+    border-radius:16px;padding:52px 28px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:9px;
+  }
+  .plan-locked-icon{width:50px;height:50px;border-radius:50%;background:#1e2330;display:flex;align-items:center;justify-content:center}
+  .plan-locked-box h3{font-family:'DM Serif Display',serif;font-size:20px}
+  .plan-locked-box p{color:#6b7280;font-size:13px;max-width:300px;line-height:1.65}
+  .mini-progress{display:flex;gap:6px;margin-top:8px}
+  .mini-dot{width:30px;height:4px;border-radius:2px;background:#1e2330;transition:background .4s}
+  .mini-dot.done{background:#4f8eff}
+  .plan-generating{
+    background:#161921;border:1px solid rgba(255,255,255,.07);
+    border-radius:16px;padding:56px 28px;text-align:center;
+    display:none;flex-direction:column;align-items:center;gap:14px;
+  }
+  .spinner{width:40px;height:40px;border-radius:50%;border:3px solid #1e2330;border-top-color:#4f8eff;animation:spin .8s linear infinite}
+  #planContent{display:none}
+  .verdict-card{
+    background:linear-gradient(135deg,rgba(79,142,255,.07),rgba(167,139,250,.07));
+    border:1px solid rgba(79,142,255,.18);
+    border-radius:16px;padding:24px 26px;margin-bottom:16px;
+    position:relative;overflow:hidden;
+  }
+  .verdict-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#4f8eff,#a78bfa)}
+  .verdict-label{font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#4f8eff;margin-bottom:9px}
+  .score-row{display:flex;align-items:flex-end;gap:12px;margin-bottom:10px}
+  .score-num{font-family:'DM Serif Display',serif;font-size:52px;line-height:1;background:linear-gradient(135deg,#4f8eff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .score-bar-wrap{flex:1;padding-bottom:6px}
+  .score-bar-bg{height:5px;background:#1e2330;border-radius:3px;overflow:hidden;margin-bottom:4px}
+  .score-bar-fill{height:100%;background:linear-gradient(90deg,#4f8eff,#a78bfa);width:0%;transition:width 1.5s ease;animation:barIn 1.5s ease}
+  .score-sub{font-size:12px;color:#6b7280}
+  .verdict-text{font-size:13px;line-height:1.75;color:#c5cfe8}
+  .plan-cards{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+  @media(max-width:560px){.plan-cards{grid-template-columns:1fr}}
+  .plan-card{background:#161921;border-radius:13px;padding:16px}
+  .plan-card h4{font-size:13px;font-weight:600;margin-bottom:10px}
+  .plan-card li{font-size:12px;color:#9ca3b8;line-height:1.55;padding-left:13px;position:relative;margin-bottom:6px;list-style:none}
+  .plan-card li::before{content:'→';position:absolute;left:0}
+  .card-green{border:1px solid rgba(52,211,153,.1)}
+  .card-green li::before{color:#34d399}
+  .card-yellow{border:1px solid rgba(251,191,36,.08)}
+  .card-yellow li::before{color:#fbbf24}
+  .card-blue{border:1px solid rgba(79,142,255,.08)}
+  .card-blue li::before{color:#4f8eff}
+  .card-purple{border:1px solid rgba(167,139,250,.08)}
+  .card-purple li::before{color:#a78bfa}
+  .timeline-card{background:#161921;border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:18px 22px}
+  .tl-head{display:flex;align-items:center;gap:9px;margin-bottom:16px}
+  .tl-icon{width:32px;height:32px;border-radius:9px;background:rgba(167,139,250,.1);display:flex;align-items:center;justify-content:center;color:#a78bfa}
+  .tl-head span{font-size:14px;font-weight:600}
+  .tl-item{display:flex;gap:12px}
+  .tl-dot-col{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+  .tl-dot{width:11px;height:11px;border-radius:50%;margin-top:3px}
+  .tl-line{flex:1;width:2px;background:rgba(255,255,255,.07);margin-top:3px}
+  .tl-when{font-size:11px;font-weight:600;margin-bottom:2px}
+  .tl-what{font-size:12px;color:#c5cfe8;line-height:1.55;padding-bottom:16px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Strategi·Lab</div>
+  <div class="progress-dots">
+    <div class="pdot active" id="dot0"></div>
+    <div class="pdot" id="dot1"></div>
+    <div class="pdot" id="dot2"></div>
+    <div class="pdot" id="dot3"></div>
+  </div>
+</header>
+
+<!-- API BANNER -->
+<div class="api-banner">
+  <label>Claude API nøgle:</label>
+  <input type="password" id="apiKey" placeholder="sk-ant-api03-..." />
+  <button class="api-save" onclick="saveKey()">Gem</button>
+  <span id="apiStatus"></span>
+  <span style="margin-left:auto;font-size:11px;color:#4b5563">Gemmes kun i denne session</span>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">Interaktivt læringsforløb</div>
+  <h1>Se, reflekter og <em>byg</em> din strategi</h1>
+  <p>4 moduler med video og personlig AI-dialog. Afslut med din skræddersyede handlingsplan.</p>
+</div>
+
+<!-- MODULES (generated by JS) -->
+<div id="modules"></div>
+
+<!-- STAR DIVIDER -->
+<div class="divider"><div class="div-line"></div><div class="div-icon">★</div><div class="div-line"></div></div>
+
+<!-- ACTION PLAN -->
+<div class="plan-section">
+  <div class="plan-header">
+    <div class="plan-tag">Din handlingsplan</div>
+    <h2>Personlig AI-vurdering</h2>
+    <p>Baseret på alle dine svar fra de 4 moduler</p>
+  </div>
+  <div class="plan-locked-box" id="planLocked">
+    <div class="plan-locked-icon">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+    <h3>Fuldfør alle 4 moduler</h3>
+    <p>Din handlingsplan genereres automatisk når alle samtaler er gennemført.</p>
+    <div class="mini-progress">
+      <div class="mini-dot" id="mini0"></div>
+      <div class="mini-dot" id="mini1"></div>
+      <div class="mini-dot" id="mini2"></div>
+      <div class="mini-dot" id="mini3"></div>
+    </div>
+    <div style="font-size:12px;color:#6b7280" id="modCount">0 / 4 moduler gennemført</div>
+  </div>
+  <div class="plan-generating" id="planGenerating">
+    <div class="spinner"></div>
+    <p style="color:#6b7280;font-size:13px">Claude analyserer dine svar og skriver din personlige plan...</p>
+  </div>
+  <div id="planContent">
+    <div class="verdict-card">
+      <div class="verdict-label">Samlet vurdering</div>
+      <div class="score-row">
+        <div class="score-num" id="scoreNum">—</div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-bg"><div class="score-bar-fill" id="scoreBar"></div></div>
+          <div class="score-sub" id="scoreSub"></div>
+        </div>
+      </div>
+      <div class="verdict-text" id="verdictText"></div>
+    </div>
+    <div class="plan-cards">
+      <div class="plan-card card-green"><h4>💪 Styrker</h4><ul id="listStrengths"></ul></div>
+      <div class="plan-card card-yellow"><h4>👁 Blinde vinkler</h4><ul id="listBlinds"></ul></div>
+      <div class="plan-card card-blue"><h4>🎯 Anbefalinger</h4><ul id="listRecs"></ul></div>
+      <div class="plan-card card-purple"><h4>🚀 Næste skridt</h4><ul id="listNext"></ul></div>
+    </div>
+    <div class="timeline-card">
+      <div class="tl-head">
+        <div class="tl-icon"><svg width="15" height="15" fill="none" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        <span>Tidsplan</span>
+      </div>
+      <div id="timeline"></div>
+    </div>
+  </div>
+</div>
+
+<div style="height:60px"></div>
+
+<script>
+const VIMEO_URL = "https://player.vimeo.com/video/1018293845";
+const TL_COLORS = ["#4f8eff","#a78bfa","#34d399","#fbbf24"];
+
+const MODULES = [
+  {
+    title:"Forstå dit udgangspunkt", sub:"Modul 1",
+    videoTitle:"Hvad er din nuværende situation?", dur:"6:42",
+    opener:"Velkommen! Du har netop set videoen om dit udgangspunkt. Beskriv kort hvad du er i gang med lige nu — hvad er din nuværende situation?",
+    system:`Du er StratAI, en venlig strategisk sparringspartner. Brugeren har netop set en video om at forstå sit udgangspunkt.
+Stil præcis 3 spørgsmål (ét ad gangen):
+1. Hvad er brugerens nuværende situation og hvad er de i gang med?
+2. Hvad er deres største udfordring lige nu?
+3. Hvad er deres vigtigste styrke?
+Regler: Stil KUN ét spørgsmål ad gangen. Korte spørgsmål (max 2 sætninger). Vær nysgerrig og anerkendende. Svar ALTID på dansk. Tæl brugerens svar internt. Efter det 3. svar: afslut med en kort opsummering og skriv [MODUL_KOMPLET] allersidst.`
+  },
+  {
+    title:"Definér din vision og mål", sub:"Modul 2",
+    videoTitle:"Hvad vil du opnå — om 1 og 5 år?", dur:"8:15",
+    opener:"Nu handler det om retning. Forestil dig dig selv om 3 år — hvad ser du for dig?",
+    system:`Du er StratAI, en venlig strategisk sparringspartner. Brugeren har netop set en video om vision og mål.
+Stil præcis 3 spørgsmål (ét ad gangen):
+1. Hvad er brugerens overordnede vision for de næste 3-5 år?
+2. Det vigtigste konkrete mål inden for 12 måneder?
+3. Hvad driver dem — deres 'hvorfor'?
+Regler: Stil KUN ét spørgsmål ad gangen. Hjælp dem med at skærpe og præcisere. Svar ALTID på dansk. Efter det 3. svar: afslut med opmuntrende opsummering og skriv [MODUL_KOMPLET] allersidst.`
+  },
+  {
+    title:"Ressourcer og begrænsninger", sub:"Modul 3",
+    videoTitle:"Hvad har du til rådighed — og hvad mangler du?", dur:"7:30",
+    opener:"Nu kortlægger vi dine ressourcer. Hvad har du til rådighed i dag — tid, penge, kompetencer og netværk?",
+    system:`Du er StratAI, en venlig strategisk sparringspartner. Brugeren har netop set en video om ressourcer.
+Stil præcis 3 spørgsmål (ét ad gangen):
+1. Hvad har brugeren til rådighed (tid, penge, netværk, kompetencer)?
+2. Hvad er deres største ressourcebegrænsning?
+3. Hvem kan hjælpe dem, og hvad er det mindste de behøver for at starte?
+Regler: Stil KUN ét spørgsmål ad gangen. Vær konkret og realistisk. Svar ALTID på dansk. Efter det 3. svar: lav kortfattet ressource-oversigt og skriv [MODUL_KOMPLET] allersidst.`
+  },
+  {
+    title:"Din konkrete plan", sub:"Modul 4",
+    videoTitle:"Sæt de konkrete trin — fra nu til mål", dur:"9:05",
+    opener:"Sidste modul! Nu gør vi det helt konkret. Hvad er det allerførste skridt du kan tage — denne uge?",
+    system:`Du er StratAI, en venlig strategisk sparringspartner. Brugeren har netop set en video om konkret handlingsplan.
+Stil præcis 3 spørgsmål (ét ad gangen):
+1. Hvad er det allerførste konkrete skridt de kan tage denne uge?
+2. Hvornår præcist — og hvad er plan B hvis noget stopper dem?
+3. Hvem holder dem ansvarlige for at følge planen?
+Regler: Stil KUN ét spørgsmål ad gangen. Pres dem venligt til at være meget konkrete. Svar ALTID på dansk. Efter det 3. svar: motiverende opsummering af hele rejsen og skriv [MODUL_KOMPLET] allersidst.`
+  }
+];
+
+// STATE
+let apiKey = '';
+const watched   = [false,false,false,false];
+const completed = [false,false,false,false];
+const histories = [[],[],[],[]];
+const isTyping  = [false,false,false,false];
+const qCounts   = [0,0,0,0];
+
+// BUILD MODULES
+function buildModules() {
+  const container = document.getElementById('modules');
+  MODULES.forEach((m, i) => {
+    const isFirst = i === 0;
+    container.innerHTML += `
+      <div class="section" id="sec${i}" style="opacity:${isFirst?1:0.3};pointer-events:${isFirst?'auto':'none'};transition:opacity .6s">
+        <div class="section-head">
+          <div class="step-badge">${i+1}</div>
+          <div>
+            <div class="step-label">${m.sub}</div>
+            <div class="step-name">${m.title}</div>
+          </div>
+          <div class="done-badge" id="doneBadge${i}">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#34d399" stroke-width="2"/><path d="M8 12l3 3 5-5" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Gennemført
+          </div>
+        </div>
+        <div class="video-card">
+          <div class="video-wrap">
+            <iframe src="${VIMEO_URL}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen
+              title="${m.videoTitle}" onload="onVideoLoad(${i})"></iframe>
+            <div class="chat-open-badge" id="chatBadge${i}">
+              <div class="dot"></div> Chat åben
+            </div>
+          </div>
+          <div class="video-meta">
+            <div class="video-title">${m.videoTitle}</div>
+            <div class="video-dur">${m.dur}</div>
+          </div>
+        </div>
+        <div class="chat-card">
+          <div class="chat-head">
+            <div class="ai-av">AI</div>
+            <div>
+              <div class="chat-head-name">StratAI</div>
+              <div class="chat-head-sub">${m.title}</div>
+            </div>
+            <div class="online-dot"></div>
+          </div>
+          <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog${i}"></div></div>
+          <div class="prog-label" id="progLabel${i}">0 / 3 spørgsmål</div>
+          <div class="chat-msgs" id="msgs${i}">
+            <div class="chat-locked" id="lock${i}">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="#6b7280" stroke-width="1.5"/></svg>
+              Videoen loader — chatten åbner automatisk...
+            </div>
+          </div>
+          <div id="inputArea${i}" style="display:none">
+            <div class="chat-input-area">
+              <textarea class="chat-input" id="inp${i}" placeholder="Skriv dit svar..." rows="1"
+                onkeydown="handleKey(event,${i})" oninput="autoResize(this)"></textarea>
+              <button class="send-btn" id="sendBtn${i}" onclick="send(${i})">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      ${i < 3 ? `<div class="divider"><div class="div-line"></div><div class="div-icon">↓</div><div class="div-line"></div></div>` : ''}
+    `;
+  });
+}
+
+// API KEY
+function saveKey() {
+  const v = document.getElementById('apiKey').value.trim();
+  const s = document.getElementById('apiStatus');
+  if (!v.startsWith('sk-ant-')) {
+    s.textContent = 'Ugyldig nøgle'; s.className = 'err'; return;
+  }
+  apiKey = v;
+  s.textContent = 'Gemt ✓'; s.className = 'ok';
+  document.getElementById('apiKey').value = '••••••••••••••••';
+}
+
+// CLAUDE API
+async function callClaude(system, messages, maxTokens=400) {
+  if (!apiKey) return "Tilføj din Claude API nøgle øverst for at aktivere AI-chat.";
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxTokens,system,messages})
+    });
+    const d = await res.json();
+    if (!res.ok) return `Fejl: ${d.error?.message||res.status}`;
+    return d.content?.[0]?.text || "Ingen svar.";
+  } catch(e) {
+    return `Forbindelsesfejl: ${e.message}`;
+  }
+}
+
+// VIDEO LOAD → unlock chat
+async function onVideoLoad(idx) {
+  if (watched[idx]) return;
+  watched[idx] = true;
+  document.getElementById('chatBadge'+idx).classList.add('show');
+
+  // Show typing then opener
+  const lock = document.getElementById('lock'+idx);
+  lock.innerHTML = `<div class="msg ai"><div class="msg-av">AI</div><div class="typing-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div></div>`;
+  await delay(1000);
+
+  const msgsEl = document.getElementById('msgs'+idx);
+  msgsEl.innerHTML = '';
+  addMsg(idx, 'ai', MODULES[idx].opener);
+  histories[idx] = [{role:'assistant', content:MODULES[idx].opener}];
+
+  document.getElementById('inputArea'+idx).style.display = 'block';
+  document.getElementById('inp'+idx).focus();
+}
+
+// MESSAGES
+function addMsg(idx, role, text) {
+  const el = document.getElementById('msgs'+idx);
+  const clean = text.replace('[MODUL_KOMPLET]','').trim();
+  const div = document.createElement('div');
+  div.className = `msg ${role} mi`;
+  div.innerHTML = `
+    <div class="msg-av">${role==='user'?'Du':'AI'}</div>
+    <div class="bubble">${clean}</div>
+  `;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function showTyping(idx) {
+  return new Promise(resolve => {
+    const el = document.getElementById('msgs'+idx);
+    const d = document.createElement('div');
+    d.className = 'msg ai'; d.id = 'typ'+idx;
+    d.innerHTML = `<div class="msg-av">AI</div><div class="typing-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>`;
+    el.appendChild(d); el.scrollTop = el.scrollHeight;
+    setTimeout(()=>{ d.remove(); resolve(); }, 800+Math.random()*600);
+  });
+}
+
+// SEND
+async function send(idx) {
+  const inp = document.getElementById('inp'+idx);
+  const text = inp.value.trim();
+  if (!text || isTyping[idx] || completed[idx]) return;
+
+  inp.value = ''; inp.style.height = 'auto';
+  isTyping[idx] = true;
+  setSendBtn(idx, true);
+
+  addMsg(idx, 'user', text);
+  const newHist = [...histories[idx], {role:'user', content:text}];
+  histories[idx] = newHist;
+
+  const uc = newHist.filter(m=>m.role==='user').length;
+  qCounts[idx] = Math.min(uc, 3);
+  updateProgress(idx);
+
+  await showTyping(idx);
+  const reply = await callClaude(MODULES[idx].system, newHist);
+
+  histories[idx] = [...newHist, {role:'assistant', content:reply}];
+  addMsg(idx, 'ai', reply);
+
+  isTyping[idx] = false;
+  setSendBtn(idx, false);
+
+  if (reply.includes('[MODUL_KOMPLET]')) {
+    completeModule(idx);
+  }
+}
+
+function setSendBtn(idx, disabled) {
+  const btn = document.getElementById('sendBtn'+idx);
+  const inp = document.getElementById('inp'+idx);
+  btn.disabled = disabled;
+  inp.disabled = disabled;
+}
+
+function updateProgress(idx) {
+  const pct = (qCounts[idx]/3)*100;
+  document.getElementById('prog'+idx).style.width = pct+'%';
+  document.getElementById('progLabel'+idx).textContent = completed[idx] ? '✓ Gennemført' : `${qCounts[idx]} / 3 spørgsmål`;
+}
+
+async function completeModule(idx) {
+  completed[idx] = true;
+  qCounts[idx] = 3;
+  updateProgress(idx);
+  document.getElementById('doneBadge'+idx).classList.add('show');
+  document.getElementById('inputArea'+idx).style.display = 'none';
+
+  // Update mini progress & dots
+  document.getElementById('mini'+idx).classList.add('done');
+  const done = completed.filter(Boolean).length;
+  document.getElementById('modCount').textContent = `${done} / 4 moduler gennemført`;
+
+  // Progress dots
+  for (let i=0;i<4;i++) {
+    const d = document.getElementById('dot'+i);
+    d.className = 'pdot' + (completed[i]?' done':(i===0||completed[i-1])?' active':'');
+  }
+
+  // Unlock next
+  if (idx < 3) {
+    await delay(600);
+    const next = document.getElementById('sec'+(idx+1));
+    next.style.opacity = '1';
+    next.style.pointerEvents = 'auto';
+    next.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  // All done → generate plan
+  if (completed.every(Boolean)) {
+    await delay(1000);
+    generatePlan();
+  }
+}
+
+// GENERATE PLAN
+async function generatePlan() {
+  document.getElementById('planLocked').style.display = 'none';
+  document.getElementById('planGenerating').style.display = 'flex';
+  document.getElementById('planSec') || document.querySelector('.plan-section').scrollIntoView({behavior:'smooth'});
+
+  const summary = MODULES.map((m,i) => {
+    const answers = histories[i].filter(x=>x.role==='user').map(x=>`  • ${x.content}`).join('\n');
+    return `Modul ${i+1} - ${m.title}:\n${answers}`;
+  }).join('\n\n');
+
+  const prompt = `Du er en strategisk rådgiver. Lav en meget personlig handlingsplan baseret på disse svar:\n\n${summary}\n\nReturner KUN gyldig JSON uden markdown:\n{"score":85,"scoreLabel":"Stærk plan med klart potentiale","verdict":"2-3 sætninger meget personlig vurdering","strengths":["punkt","punkt","punkt"],"blindSpots":["punkt","punkt","punkt"],"recommendations":["punkt","punkt","punkt"],"nextSteps":["punkt","punkt","punkt"],"timeline":[{"when":"Uge 1-2","what":"handling"},{"when":"Måned 1","what":"handling"},{"when":"Kvartal 1","what":"handling"},{"when":"6 måneder","what":"handling"}]}`;
+
+  const reply = await callClaude('Du er en strategisk rådgiver der returnerer JSON.', [{role:'user',content:prompt}], 1200);
+
+  document.getElementById('planGenerating').style.display = 'none';
+  document.getElementById('planContent').style.display = 'block';
+
+  try {
+    const p = JSON.parse(reply.replace(/```json|```/g,'').trim());
+    document.getElementById('scoreNum').textContent = p.score;
+    document.getElementById('scoreSub').textContent = p.scoreLabel;
+    document.getElementById('verdictText').textContent = p.verdict;
+    setTimeout(()=>{ document.getElementById('scoreBar').style.width = p.score+'%'; }, 200);
+    const fill = (id, items) => document.getElementById(id).innerHTML = items.map(x=>`<li>${x}</li>`).join('');
+    fill('listStrengths', p.strengths);
+    fill('listBlinds', p.blindSpots);
+    fill('listRecs', p.recommendations);
+    fill('listNext', p.nextSteps);
+    document.getElementById('timeline').innerHTML = p.timeline.map((t,i)=>`
+      <div class="tl-item">
+        <div class="tl-dot-col">
+          <div class="tl-dot" style="background:${TL_COLORS[i]}"></div>
+          ${i<p.timeline.length-1?'<div class="tl-line"></div>':''}
+        </div>
+        <div>
+          <div class="tl-when" style="color:${TL_COLORS[i]}">${t.when}</div>
+          <div class="tl-what">${t.what}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch {
+    document.getElementById('verdictText').textContent = reply;
+  }
+
+  document.querySelector('.plan-section').scrollIntoView({behavior:'smooth'});
+}
+
+// UTILS
+function handleKey(e, idx) {
+  if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); send(idx); }
+}
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+function delay(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+buildModules();
+</script>
+</body>
+</html>
